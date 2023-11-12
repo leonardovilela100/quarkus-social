@@ -25,19 +25,18 @@ import java.util.Set;
 @Produces(MediaType.APPLICATION_JSON)
 public class UserResource {
 
-    private final UserRepository repository;
+    private final UserRepository userRepository;
     private final Validator validator;
 
     @Inject
-    public UserResource(UserRepository repository, Validator validator) {
-        this.repository = repository;
+    public UserResource(UserRepository userRepository, Validator validator) {
+        this.userRepository = userRepository;
         this.validator = validator;
     }
 
     @GET
     public Response listAllUser() {
-        PanacheQuery<User> query = repository.findAll();
-        System.out.println(query.list());
+        PanacheQuery<User> query = userRepository.findAll();
         return Response.ok(query.list()).build();
     }
 
@@ -56,10 +55,11 @@ public class UserResource {
         }
 
         User user = new User();
+
         user.setAge(userRequest.getAge());
         user.setName(userRequest.getName());
 
-        repository.persist(user);
+        userRepository.persist(user);
 
         return Response.status(Response
                 .Status.CREATED.getStatusCode())
@@ -67,13 +67,27 @@ public class UserResource {
                 .build();
     }
 
+    @POST
+    @Path("/new")
+    @Transactional
+    public Response createUser2( User userRequest ) {
+
+        userRepository.persist(userRequest);
+
+        return Response.status(Response
+                        .Status.CREATED.getStatusCode())
+                .entity(userRequest)
+                .build();
+    }
+
+
 
     @PUT
     @Path("{id}")
     @Transactional
     public Response updateUser( @PathParam("id") Long id, CreateUserRequest userData) {
 
-        User user = repository.findById(id);
+        User user = userRepository.findById(id);
 
        if(user != null) {
            user.setName(userData.getName());
@@ -90,10 +104,10 @@ public class UserResource {
     @Transactional
     public Response deleteUser(@PathParam("id") Long id) {
 
-        User user = repository.findById(id);
+        User user = userRepository.findById(id);
 
         if(user != null) {
-            repository.delete(user);
+            userRepository.delete(user);
             return Response.noContent().build();
         }
 
